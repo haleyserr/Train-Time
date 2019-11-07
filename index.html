@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Train Time</title>
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <style>
+        body {
+            background-image: url("./Images/Background.png");
+            background-repeat: no-repeat;
+            background-size: cover;
+
+        }
+    </style>
+</head>
+
+<body>
+
+
+    <div class="row content-center">
+        <div class="col-md-2"></div>
+        <div id="train-display" class="col-md-8 align-center">
+            <h1 class="text-center">Schedule: Destination Station</h1>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">Train Name</th>
+                        <th scope="col">Destination</th>
+                        <th scope="col">Frequency</th>
+                        <th scope="col">Minutes Away</th>
+                        <th scope="col">Next Arrival Time</th>
+
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Polar Express</td>
+                        <td>North Pole</td>
+                        <td>600</td>
+                        <td>120</td>
+                        <td>12:00</td>
+
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+        <div class="col-md-2"></div>
+    </div>
+    <div class="row content-center">
+        <div class="col-md-2"></div>
+        <div id="add-train" class="col-md-8 align-center">
+
+            <form>
+                <div class="form-group">
+                    <label for="train-name">Train Name</label>
+                    <input type="text" class="form-control" id="inputTrainName" aria-describedby="employeeNameHelp">
+                </div>
+                <div class="form-group">
+                    <label for="destination">Destination</label>
+                    <input type="text" class="form-control" id="inputDestination" aria-describedby="roleHelp">
+                </div>
+
+                <div class="form-group">
+                    <label for="frequency">Frequency</label>
+                    <input type="number" class="form-control" id="inputFrequency" aria-describedby="mothsworkedHelp"
+                        placeholder="Minutes">
+                </div>
+
+                <div class="form-group">
+                    <label for="first-train-time">First Train Time</label>
+                    <input type="text" class="form-control" id="inputFirstTrainTime" aria-describedby="startDateHelp"
+                        placeholder="HH:MM">
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="submit">Submit</button>
+            </form>
+
+        </div>
+
+        <div class="col-md-2"></div>
+    </div>
+
+
+    <script src="https://code.jquery.com/jquery.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.24.0/moment.min.js"></script>
+    
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/7.2.3/firebase-app.js"></script>
+
+    <!-- TODO: Add SDKs for Firebase products that you want to use
+     https://firebase.google.com/docs/web/setup#available-libraries -->
+    <script src="https://www.gstatic.com/firebasejs/7.2.3/firebase-analytics.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.2.3/firebase-database.js"></script>
+
+    <script>
+        // Your web app's Firebase configuration
+        var firebaseConfig = {
+            apiKey: "AIzaSyCw1cfwOH3RUfKvwm0dcWHw7lCRJuk3Ht0",
+            authDomain: "train-time-6457d.firebaseapp.com",
+            databaseURL: "https://train-time-6457d.firebaseio.com",
+            projectId: "train-time-6457d",
+            storageBucket: "train-time-6457d.appspot.com",
+            messagingSenderId: "243396735632",
+            appId: "1:243396735632:web:b8103799c3f7b38d2c5e15",
+            measurementId: "G-057EYSRF67"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        // Initial Values
+        let TrainName = "";
+        let Destination = "";
+        let Frequency = "";
+        let NextArrivalTime = "";
+        let MinutesAway = "";
+        
+        // After Submitting New Train
+        //Can push Train Name, Frequency, and Destination
+        //Need to calculate Next Arrival and Minutes Away
+        //Compare against First Train Time-provided against current time
+
+        $("#submit").on("click", function () {
+            event.preventDefault();
+
+            TrainName = $("#inputTrainName").val();
+            Destination = $("#inputDestination").val();
+            Frequency = $("#inputFrequency").val();
+            FirstTrainTime = $("#inputFirstTrainTime").val();
+
+            //Math-wise: 
+            // 1-We want to find the difference between the Current Time and First Train Time. 
+            // 2-We divide by the frequency and see if there is a remainder. 
+            // 3-Subtract the remainder from the frequency.
+            //***Have to convert time to be sure it occurs in past per Tish's example. This makes sense as a date was not provided.
+
+            //Working Variables
+            const currentTime = moment();
+            const FirstTrainTimeConverted = moment(FirstTrainTime, "hh:mm").subtract(1, "years");
+            const timeDifference = moment().diff(moment(FirstTrainTimeConverted), "minutes");
+            const tRemainder = timeDifference % Frequency;
+
+            console.log("Current Time:" + currentTime);
+            console.log("First Train Time-Converted:" + FirstTrainTimeConverted);
+            console.log("Time Difference:" + timeDifference);
+            console.log("Remainder:" + tRemainder);
+            
+            //Results
+            const MinutesAway = Frequency - tRemainder;
+            const NextArrivalTimeUnformated = moment().add(MinutesAway, "minutes");
+            const NextArrivalTime =NextArrivalTimeUnformated.format("hh:mm")
+            
+            console.log("Minutes Away:" + MinutesAway);
+            console.log("Next Arrival Time:" + NextArrivalTime);
+            
+            //Push Display Items
+            database.ref().push({
+                trainName: TrainName,
+                destination: Destination,
+                frequency: Frequency,
+                nextArrivalTime: NextArrivalTime,
+                minutesAway: MinutesAway,
+                
+            });
+        });
+
+        //Add to html display
+        database.ref().on("child_added", function (snapshot) {
+            const newRow = $("<tr>");
+            newRow.append(`<td> ${snapshot.val().trainName} </td> `);
+            newRow.append(`<td> ${snapshot.val().destination} </td> `);
+            newRow.append(`<td> ${snapshot.val().frequency} </td> `);
+            newRow.append(`<td> ${snapshot.val().minutesAway} </td> `);
+            newRow.append(`<td> ${snapshot.val().nextArrivalTime} </td> `);
+            
+            $("tbody").append(newRow);
+        });
+    </script>
+</body>
+
+</html>
